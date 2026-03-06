@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Cautela de Armamento</title>
+
+<style>
+
+body{
+font-family:Arial;
+max-width:500px;
+margin:auto;
+padding:20px;
+}
+
+input,button,select{
+width:100%;
+padding:12px;
+margin:8px 0;
+font-size:18px;
+}
+
+button{
+background:#0d47a1;
+color:white;
+border:none;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>Sistema de Cautela</h2>
+
+<h3>Login</h3>
+
+<input id="funcional" placeholder="Funcional">
+
+<input id="senha" type="password" placeholder="Senha">
+
+<button onclick="login()">Entrar</button>
+
+<hr>
+
+<div id="sistema" style="display:none">
+
+<h3>Cautela</h3>
+
+<input id="arma" placeholder="Tipo de arma">
+
+<input id="numero" placeholder="Número da arma">
+
+<input id="municao" placeholder="Quantidade munição">
+
+<label>
+
+<input type="checkbox" id="confirmacao">
+
+Confirmo conferência com supervisor
+
+</label>
+
+<button onclick="cautelar()">Registrar Cautela</button>
+
+<hr>
+
+<h3>Descautela</h3>
+
+<button onclick="descautelar()">Registrar Devolução</button>
+
+</div>
+
+<script>
+
+const API="COLE_AQUI_URL_APPS_SCRIPT";
+
+let nome="";
+let funcional="";
+
+function login(){
+
+funcional=document.getElementById("funcional").value;
+
+let senha=document.getElementById("senha").value;
+
+fetch(API,{
+method:"POST",
+body:JSON.stringify({
+acao:"login",
+funcional:funcional,
+senha:senha
+})
+})
+.then(r=>r.json())
+.then(d=>{
+
+if(d.status=="ok"){
+
+nome=d.nome;
+
+document.getElementById("sistema").style.display="block";
+
+alert("Bem vindo "+nome)
+
+}else{
+
+alert("Login inválido")
+
+}
+
+})
+
+}
+
+function cautelar(){
+
+if(!document.getElementById("confirmacao").checked){
+
+alert("Confirme a conferência")
+
+return
+
+}
+
+fetch(API,{
+method:"POST",
+body:JSON.stringify({
+
+acao:"cautela",
+
+nome:nome,
+
+funcional:funcional,
+
+arma:document.getElementById("arma").value,
+
+numero:document.getElementById("numero").value,
+
+municao:document.getElementById("municao").value
+
+})
+})
+
+alert("Cautela registrada")
+
+}
+
+function descautelar(){
+
+fetch(API,{
+method:"POST",
+body:JSON.stringify({
+
+acao:"descautela",
+
+nome:nome,
+
+funcional:funcional,
+
+arma:document.getElementById("arma").value,
+
+numero:document.getElementById("numero").value,
+
+municao:document.getElementById("municao").value
+
+})
+})
+
+alert("Descautela registrada")
+
+}
+
+</script>
+
+</body>
+
+</html>
