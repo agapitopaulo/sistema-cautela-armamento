@@ -94,26 +94,33 @@ async function login(){
 funcional=document.getElementById("funcional").value;
 let senha=document.getElementById("senha").value;
 
+let form = new FormData();
+form.append("acao","login");
+form.append("funcional",funcional);
+form.append("senha",senha);
+
 try{
 
-await fetch(API,{
+let resposta = await fetch(API,{
 method:"POST",
-mode:"no-cors",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-acao:"login",
-funcional:funcional,
-senha:senha
-})
+body:form
 });
 
-nome="Servidor";
+let dados = await resposta.json();
+
+if(dados.status=="ok"){
+
+nome=dados.nome;
 
 document.getElementById("sistema").style.display="block";
 
-alert("Login realizado")
+alert("Bem vindo "+nome)
+
+}else{
+
+alert("Login inválido")
+
+}
 
 }catch(erro){
 
@@ -127,69 +134,50 @@ async function cautelar(){
 
 if(!document.getElementById("confirmacao").checked){
 
-alert("Confirme a conferência")
-return
+alert("Confirme a conferência");
+return;
 
 }
 
+let form = new FormData();
+
+form.append("acao","cautela");
+form.append("nome",nome);
+form.append("funcional",funcional);
+form.append("arma",document.getElementById("arma").value);
+form.append("numero",document.getElementById("numero").value);
+form.append("municao",document.getElementById("municao").value);
+
 await fetch(API,{
 method:"POST",
-mode:"no-cors",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
+body:form
+});
 
-acao:"cautela",
-
-nome:nome,
-
-funcional:funcional,
-
-arma:document.getElementById("arma").value,
-
-numero:document.getElementById("numero").value,
-
-municao:document.getElementById("municao").value
-
-})
-})
-
-alert("Cautela registrada")
+alert("Cautela registrada");
 
 }
 
 async function descautelar(){
 
+let form = new FormData();
+
+form.append("acao","descautela");
+form.append("nome",nome);
+form.append("funcional",funcional);
+form.append("arma",document.getElementById("arma").value);
+form.append("numero",document.getElementById("numero").value);
+form.append("municao",document.getElementById("municao").value);
+
 await fetch(API,{
 method:"POST",
-mode:"no-cors",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
+body:form
+});
 
-acao:"descautela",
-
-nome:nome,
-
-funcional:funcional,
-
-arma:document.getElementById("arma").value,
-
-numero:document.getElementById("numero").value,
-
-municao:document.getElementById("municao").value
-
-})
-})
-
-alert("Descautela registrada")
+alert("Descautela registrada");
 
 }
 
 </script>
-
 </body>
 
 </html>
