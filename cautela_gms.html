@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Cautela de Armamentos — GMS</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f4f8; min-height: 100vh; }
+
+  .header { background: #185FA5; color: white; padding: 1rem 1.25rem; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+  .header-title { font-size: 11px; font-weight: 600; opacity: 0.8; letter-spacing: 0.1em; text-transform: uppercase; }
+  .header-main { font-size: 18px; font-weight: 600; margin: 2px 0; }
+  .header-sub { font-size: 12px; opacity: 0.75; }
+
+  .tabs { display: flex; background: #0C447C; }
+  .tab { flex: 1; padding: 0.7rem 0.5rem; text-align: center; font-size: 13px; font-weight: 600; cursor: pointer; color: rgba(255,255,255,0.6); border-bottom: 3px solid transparent; transition: all 0.2s; letter-spacing: 0.03em; }
+  .tab.active { color: white; border-bottom-color: #85B7EB; background: rgba(255,255,255,0.08); }
+
+  .container { max-width: 480px; margin: 0 auto; padding: 1rem; }
+
+  .form-card { background: white; border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 1rem; }
+
+  .info-box { background: #E6F1FB; border-left: 3px solid #378ADD; border-radius: 6px; padding: 0.6rem 0.9rem; font-size: 12px; color: #0C447C; margin-bottom: 1rem; line-height: 1.5; }
+
+  .section-label { font-size: 11px; font-weight: 700; color: #185FA5; text-transform: uppercase; letter-spacing: 0.08em; margin: 1rem 0 0.6rem; padding-bottom: 4px; border-bottom: 1.5px solid #B5D4F4; }
+  .section-label:first-child { margin-top: 0; }
+
+  .field { margin-bottom: 0.7rem; }
+  .field label { display: block; font-size: 12px; color: #555; margin-bottom: 4px; font-weight: 600; }
+  .field input, .field select { width: 100%; padding: 10px 12px; border: 1.5px solid #dde3ea; border-radius: 8px; font-size: 14px; background: #fafbfc; color: #1a1a2e; font-family: inherit; transition: border-color 0.2s; -webkit-appearance: none; }
+  .field input:focus, .field select:focus { outline: none; border-color: #378ADD; background: white; box-shadow: 0 0 0 3px rgba(55,138,221,0.12); }
+  .field .hint { font-size: 11px; color: #888; margin-top: 3px; }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .btn { width: 100%; padding: 13px; border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 0.03em; transition: all 0.2s; margin-top: 0.5rem; }
+  .btn-cautela { background: #185FA5; color: white; }
+  .btn-cautela:hover { background: #0C447C; }
+  .btn-cautela:active { transform: scale(0.98); }
+  .btn-descautela { background: #A32D2D; color: white; }
+  .btn-descautela:hover { background: #791F1F; }
+  .btn-descautela:active { transform: scale(0.98); }
+  .btn-config { background: #378ADD; color: white; }
+  .btn-config:hover { background: #185FA5; }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; color: white; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; text-align: center; max-width: 320px; width: 90%; }
+  .toast.show { opacity: 1; }
+  .toast.success { background: #185FA5; }
+  .toast.error { background: #A32D2D; }
+
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(12,68,124,0.5); z-index: 200; align-items: center; justify-content: center; }
+  .overlay.show { display: flex; }
+  .spinner-box { background: white; border-radius: 12px; padding: 2rem; text-align: center; min-width: 180px; }
+  .spinner { width: 36px; height: 36px; border: 3px solid #B5D4F4; border-top-color: #185FA5; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner-box p { font-size: 13px; color: #185FA5; font-weight: 600; }
+
+  .config-steps { background: #f8fafc; border-radius: 8px; padding: 1rem; margin-top: 1rem; }
+  .config-steps p { font-size: 12px; color: #444; line-height: 1.8; }
+  .config-steps strong { color: #185FA5; }
+
+  .url-saved { display: inline-block; background: #E6F1FB; color: #0C447C; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 99px; margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">Guarda Municipal de Serra</div>
+  <div class="header-main">Sistema de Cautela de Armamentos</div>
+  <div class="header-sub" id="datetime-header"></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('cautela')">Cautela</div>
+  <div class="tab" onclick="switchTab('descautela')">Descautela</div>
+  <div class="tab" onclick="switchTab('config')">Configurar</div>
+</div>
+
+<div class="container">
+
+  <!-- CAUTELA -->
+  <div class="tab-content active" id="tab-cautela">
+    <div class="form-card">
+      <div class="info-box">Preencha todos os campos para registrar a retirada do armamento.</div>
+
+      <div class="section-label">Identificação do Servidor</div>
+      <div class="field">
+        <label>Nome Completo *</label>
+        <input type="text" id="c-nome" placeholder="Ex: João da Silva">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>N° Funcional *</label>
+          <input type="text" id="c-funcional" inputmode="numeric" placeholder="Ex: 12345">
+        </div>
+        <div class="field">
+          <label>QRA *</label>
+          <input type="text" id="c-qra" placeholder="Ex: QRA-01">
+        </div>
+      </div>
+
+      <div class="section-label">Armamento</div>
+      <div class="field">
+        <label>Tipo de Armamento *</label>
+        <select id="c-tipo-arma">
+          <option value="">Selecione...</option>
+          <option>Pistola</option>
+          <option>Carabina</option>
+          <option>Espingarda</option>
+          <option>Fuzil</option>
+          <option>Outros</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Número do Armamento *</label>
+        <input type="text" id="c-num-arma" placeholder="Ex: PA-0001 ou Série AB123">
+      </div>
+
+      <div class="section-label">Munição</div>
+      <div class="row2">
+        <div class="field">
+          <label>Tipo de Munição</label>
+          <input type="text" id="c-tipo-mun" placeholder="Ex: .40 / 12 / 5.56">
+        </div>
+        <div class="field">
+          <label>Quantidade</label>
+          <input type="number" id="c-qtd-mun" placeholder="Ex: 15" min="0" inputmode="numeric">
+        </div>
+      </div>
+
+      <div class="section-label">Responsáveis</div>
+      <div class="field">
+        <label>Armeiro Responsável *</label>
+        <input type="text" id="c-armeiro" placeholder="Nome do armeiro">
+      </div>
+      <div class="field">
+        <label>Supervisor do Dia *</label>
+        <input type="text" id="c-supervisor" placeholder="Nome do supervisor">
+      </div>
+
+      <div class="section-label">Data e Hora</div>
+      <div class="field">
+        <label>Data e Hora da Cautela *</label>
+        <input type="datetime-local" id="c-datetime">
+        <div class="hint">Preenchido automaticamente — ajuste se necessário</div>
+      </div>
+
+      <button class="btn btn-cautela" onclick="submitForm('cautela')">Registrar Cautela</button>
+    </div>
+  </div>
+
+  <!-- DESCAUTELA -->
+  <div class="tab-content" id="tab-descautela">
+    <div class="form-card">
+      <div class="info-box">Registre a devolução do armamento ao paiol.</div>
+
+      <div class="section-label">Identificação do Servidor</div>
+      <div class="field">
+        <label>Nome Completo *</label>
+        <input type="text" id="d-nome" placeholder="Ex: João da Silva">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>N° Funcional *</label>
+          <input type="text" id="d-funcional" inputmode="numeric" placeholder="Ex: 12345">
+        </div>
+        <div class="field">
+          <label>QRA *</label>
+          <input type="text" id="d-qra" placeholder="Ex: QRA-01">
+        </div>
+      </div>
+
+      <div class="section-label">Armamento Devolvido</div>
+      <div class="field">
+        <label>Tipo de Armamento *</label>
+        <select id="d-tipo-arma">
+          <option value="">Selecione...</option>
+          <option>Pistola</option>
+          <option>Carabina</option>
+          <option>Espingarda</option>
+          <option>Fuzil</option>
+          <option>Outros</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Número do Armamento *</label>
+        <input type="text" id="d-num-arma" placeholder="Ex: PA-0001 ou Série AB123">
+      </div>
+
+      <div class="section-label">Munição Devolvida</div>
+      <div class="row2">
+        <div class="field">
+          <label>Tipo de Munição</label>
+          <input type="text" id="d-tipo-mun" placeholder="Ex: .40 / 12 / 5.56">
+        </div>
+        <div class="field">
+          <label>Qtd. Devolvida</label>
+          <input type="number" id="d-qtd-mun" placeholder="Ex: 15" min="0" inputmode="numeric">
+        </div>
+      </div>
+
+      <div class="section-label">Responsáveis</div>
+      <div class="field">
+        <label>Armeiro Responsável *</label>
+        <input type="text" id="d-armeiro" placeholder="Nome do armeiro">
+      </div>
+      <div class="field">
+        <label>Supervisor do Dia *</label>
+        <input type="text" id="d-supervisor" placeholder="Nome do supervisor">
+      </div>
+
+      <div class="section-label">Data e Hora</div>
+      <div class="field">
+        <label>Data e Hora da Descautela *</label>
+        <input type="datetime-local" id="d-datetime">
+        <div class="hint">Preenchido automaticamente — ajuste se necessário</div>
+      </div>
+
+      <button class="btn btn-descautela" onclick="submitForm('descautela')">Registrar Descautela</button>
+    </div>
+  </div>
+
+  <!-- CONFIGURAR -->
+  <div class="tab-content" id="tab-config">
+    <div class="form-card">
+      <div class="info-box">Cole aqui a URL do Google Apps Script para conectar ao Google Sheets. A URL deve terminar em <strong>/exec</strong>.</div>
+
+      <div class="field">
+        <label>URL do Google Apps Script</label>
+        <input type="url" id="cfg-url" placeholder="https://script.google.com/macros/s/.../exec" style="font-size:12px;">
+        <div id="url-status"></div>
+      </div>
+      <button class="btn btn-config" onclick="saveConfig()">Salvar URL</button>
+
+      <div class="config-steps">
+        <div class="section-label" style="margin-top:0;">Passo a passo</div>
+        <p>
+          1. Crie uma planilha no <strong>Google Sheets</strong><br>
+          2. Clique em <strong>Extensões → Apps Script</strong><br>
+          3. Apague o conteúdo e cole o código fornecido<br>
+          4. Salve com <strong>Ctrl+S</strong><br>
+          5. Clique em <strong>Implantar → Nova implantação</strong><br>
+          6. Tipo: <strong>App da Web</strong><br>
+          7. Quem tem acesso: <strong>Qualquer pessoa</strong><br>
+          8. Clique em <strong>Implantar</strong> e autorize<br>
+          9. Copie a URL gerada (termina em <strong>/exec</strong>)<br>
+          10. Cole acima e clique em <strong>Salvar URL</strong>
+        </p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Loading -->
+<div class="overlay" id="loading">
+  <div class="spinner-box">
+    <div class="spinner"></div>
+    <p>Enviando para<br>a planilha...</p>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // Data/hora automática
+  function setDatetime(id) {
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60000;
+    const local = new Date(now - offset);
+    document.getElementById(id).value = local.toISOString().slice(0, 16);
+  }
+
+  function updateHeader() {
+    const now = new Date();
+    document.getElementById('datetime-header').textContent =
+      now.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' }) +
+      ' — ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  setDatetime('c-datetime');
+  setDatetime('d-datetime');
+  updateHeader();
+  setInterval(updateHeader, 30000);
+
+  // Tabs
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.querySelectorAll('.tab')[['cautela','descautela','config'].indexOf(tab)].classList.add('active');
+    if (tab === 'cautela') setDatetime('c-datetime');
+    if (tab === 'descautela') setDatetime('d-datetime');
+  }
+
+  // Toast
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + type;
+    setTimeout(() => t.className = 'toast', 4000);
+  }
+
+  // Config
+  function saveConfig() {
+    const url = document.getElementById('cfg-url').value.trim();
+    if (!url.startsWith('https://script.google.com') || !url.includes('/exec')) {
+      showToast('URL inválida. Deve terminar em /exec', 'error');
+      return;
+    }
+    localStorage.setItem('gms_script_url', url);
+    document.getElementById('url-status').innerHTML = '<span class="url-status-ok" style="display:inline-block;background:#E6F1FB;color:#0C447C;font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;margin-top:6px;">URL salva com sucesso!</span>';
+    showToast('URL configurada! Sistema pronto para uso.', 'success');
+  }
+
+  // Carregar URL salva
+  window.addEventListener('load', () => {
+    const saved = localStorage.getItem('gms_script_url');
+    if (saved) {
+      document.getElementById('cfg-url').value = saved;
+      document.getElementById('url-status').innerHTML = '<span style="display:inline-block;background:#E6F1FB;color:#0C447C;font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;margin-top:6px;">URL configurada</span>';
+    }
+  });
+
+  function getVal(id) {
+    return document.getElementById(id)?.value?.trim() || '';
+  }
+
+  function clearForm(prefix) {
+    ['nome','funcional','qra','num-arma','tipo-mun','qtd-mun','armeiro','supervisor'].forEach(f => {
+      const el = document.getElementById(prefix + '-' + f);
+      if (el) el.value = '';
+    });
+    document.getElementById(prefix + '-tipo-arma').value = '';
+    setDatetime(prefix + '-datetime');
+  }
+
+  async function submitForm(tipo) {
+    const p = tipo === 'cautela' ? 'c' : 'd';
+
+    const nome      = getVal(p+'-nome');
+    const funcional = getVal(p+'-funcional');
+    const qra       = getVal(p+'-qra');
+    const tipoArma  = getVal(p+'-tipo-arma');
+    const numArma   = getVal(p+'-num-arma');
+    const tipoMun   = getVal(p+'-tipo-mun');
+    const qtdMun    = getVal(p+'-qtd-mun');
+    const armeiro   = getVal(p+'-armeiro');
+    const supervisor= getVal(p+'-supervisor');
+    const dt        = getVal(p+'-datetime');
+
+    if (!nome || !funcional || !qra || !tipoArma || !numArma || !armeiro || !supervisor) {
+      showToast('Preencha todos os campos obrigatórios (*)', 'error');
+      return;
+    }
+
+    const scriptUrl = localStorage.getItem('gms_script_url');
+    if (!scriptUrl) {
+      showToast('Configure a URL do Apps Script na aba Configurar', 'error');
+      return;
+    }
+
+    const payload = {
+      tipo: tipo === 'cautela' ? 'CAUTELA' : 'DESCAUTELA',
+      nome, funcional, qra,
+      tipoArma, numArma,
+      tipoMun, qtdMun,
+      armeiro, supervisor,
+      dataHora: dt.replace('T', ' ')
+    };
+
+    document.getElementById('loading').classList.add('show');
+
+    try {
+      const response = await fetch(scriptUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload)
+      });
+
+      document.getElementById('loading').classList.remove('show');
+
+      if (response.ok || response.type === 'opaque') {
+        showToast(tipo === 'cautela' ? 'Cautela registrada na planilha!' : 'Descautela registrada na planilha!', 'success');
+        clearForm(p);
+      } else {
+        showToast('Erro ao enviar. Verifique a URL configurada.', 'error');
+      }
+    } catch (err) {
+      document.getElementById('loading').classList.remove('show');
+      showToast('Erro de conexão. Verifique sua internet.', 'error');
+    }
+  }
+</script>
+</body>
+</html>
